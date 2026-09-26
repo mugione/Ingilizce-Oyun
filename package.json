@@ -1,0 +1,16 @@
+{
+  "name": "enoyun",
+  "version": "1.0.0",
+  "description": "6 yaş için sesli İngilizce kelime oyunu (Cloudflare Pages + D1)",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:local": "wrangler d1 execute kelime-oyunu --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute kelime-oyunu --remote --file=schema.sql",
+    "deploy": "wrangler deploy",
+    "secret": "wrangler secret put ADMIN_PASSWORD"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

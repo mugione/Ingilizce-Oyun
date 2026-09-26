@@ -1,0 +1,14 @@
+name = "enoyun"
+main = "src/index.js"
+compatibility_date = "2025-07-18"
+
+# Statik dosyalar (public/ içindeki oyun ve admin sayfaları)
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# D1 veritabanı bağlantısı
+[[d1_databases]]
+binding = "DB"
+database_name = "kelime-oyunu"
+database_id = "6c8e01f1-5cc6-4003-8cbb-f28a5286cd15"

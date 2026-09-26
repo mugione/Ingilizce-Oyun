@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>İngilizce Kelime Oyunu 🎈</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎈</text></svg>" />
+  </head>
+  <body>
+    <canvas id="confetti"></canvas>
+    <div class="wrap">
+      <!-- ======= GİRİŞ EKRANI ======= -->
+      <section id="screen-login" class="screen active">
+        <div class="card">
+          <div class="emoji-title">🎈🐶🍎</div>
+          <h1>Kelime Oyunu</h1>
+          <p class="subtitle">Sesi dinle, doğru resmi bul!</p>
+          <input
+            id="name"
+            class="name-input"
+            type="text"
+            placeholder="Adını yaz..."
+            maxlength="20"
+            autocomplete="off"
+          />
+          <button id="startBtn" class="btn green">▶ Oyna</button>
+          <a class="link" href="admin.html">⚙️ Yönetici Girişi</a>
+        </div>
+      </section>
+
+      <!-- ======= OYUN EKRANI ======= -->
+      <section id="screen-game" class="screen">
+        <div class="topbar">
+          <span class="pill" id="hi">👋</span>
+          <span class="pill" id="qcount">1 / 10</span>
+          <span class="pill score" id="score">⭐ 0</span>
+        </div>
+        <div class="progress"><span id="progressbar"></span></div>
+
+        <div class="listen">
+          <button id="speaker" class="speaker" aria-label="Kelimeyi dinle">🔊</button>
+          <p>Dinlemek için dokun</p>
+        </div>
+
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+      </section>
+
+      <!-- ======= SONUÇ EKRANI ======= -->
+      <section id="screen-result" class="screen">
+        <div class="card result-card">
+          <div id="levelUpBanner" class="levelup" hidden></div>
+          <div class="result-emoji" id="resultEmoji">🏆</div>
+          <div class="big-score" id="finalScore">0</div>
+          <p class="result-text" id="resultText">Aferin!</p>
+
+          <!-- Seviye / bölüm -->
+          <div class="level-row">
+            <span class="level-badge" id="levelBadge">Bölüm 1</span>
+            <div class="level-bar"><span id="levelBar"></span></div>
+            <span class="level-next" id="levelNext"></span>
+          </div>
+
+          <!-- İstatistikler -->
+          <div class="stats">
+            <div class="stat"><b id="stAcc">0/20</b><span>ilk denemede</span></div>
+            <div class="stat"><b id="stBest">0</b><span>en yüksek</span></div>
+            <div class="stat"><b id="stGames">0</b><span>oyun</span></div>
+            <div class="stat"><b id="stTotal">0</b><span>toplam ⭐</span></div>
+          </div>
+
+          <!-- Gelişim grafiği -->
+          <div class="devwrap">
+            <div class="devtitle">Gelişimin 📈</div>
+            <div class="chart" id="chart"></div>
+          </div>
+
+          <button id="playAgain" class="btn green">🔁 Tekrar Oyna</button>
+
+          <details class="boardwrap">
+            <summary>🏆 Sıralama</summary>
+            <ol class="board" id="board"></ol>
+          </details>
+          <a class="link" href="#" id="changeName">Farklı isimle oyna</a>
+        </div>
+      </section>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>

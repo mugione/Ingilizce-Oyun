@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yönetici Paneli - Kelime Oyunu</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  </head>
+  <body class="admin-body">
+    <!-- ======= ADMİN GİRİŞ ======= -->
+    <div id="loginBox" class="wrap" style="max-width: 420px; margin-top: 12vh">
+      <div class="card">
+        <div class="emoji-title">⚙️</div>
+        <h1>Yönetici Girişi</h1>
+        <p class="subtitle">Kelime eklemek için şifre gerekli</p>
+        <div id="loginMsg" class="msg err"></div>
+        <input id="pass" class="name-input" type="password" placeholder="Admin şifresi" />
+        <button id="loginBtn" class="btn">Giriş Yap</button>
+        <a class="link" href="index.html">← Oyuna dön</a>
+      </div>
+    </div>
+
+    <!-- ======= ADMİN PANEL ======= -->
+    <div id="panelBox" class="admin-wrap" style="display: none">
+      <div class="admin-header">
+        <h1>⚙️ Kelime Yönetimi</h1>
+        <div>
+          <a class="admin-btn ghost" href="index.html" style="text-decoration: none">🎮 Oyun</a>
+          <button id="logoutBtn" class="admin-btn ghost">Çıkış</button>
+        </div>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <!-- Yeni kelime ekle -->
+      <div class="panel">
+        <h2>➕ Yeni Kelime Ekle</h2>
+        <div class="form-row">
+          <div class="field">
+            <label>İngilizce kelime *</label>
+            <input id="f-en" placeholder="apple" autocomplete="off" />
+            <small id="dupHint" class="dup-hint"></small>
+          </div>
+          <div class="field">
+            <label>Türkçe anlamı (isteğe bağlı)</label>
+            <input id="f-tr" placeholder="elma" />
+          </div>
+        </div>
+        <div class="field" style="margin-bottom: 12px">
+          <label>Görsel * — bilgisayardan seçin (otomatik küçültülür)</label>
+          <input id="f-file" type="file" accept="image/*" />
+        </div>
+        <div id="previewWrap" style="display: none; margin-bottom: 14px; align-items: center; gap: 12px">
+          <img id="preview" alt="önizleme"
+               style="max-height: 120px; max-width: 160px; border-radius: 12px; border: 1px solid #eee; object-fit: contain; background: #fafafa" />
+          <span id="previewInfo" style="color: #7a7a94; font-size: 13px"></span>
+        </div>
+        <p style="color: #7a7a94; font-size: 13px; margin: 0 0 12px">
+          Fotoğraf çekebilir veya galeriden seçebilirsiniz. Görsel karede net görünsün diye
+          otomatik olarak ~400 piksele küçültülüp sıkıştırılır ve veritabanına kaydedilir.
+        </p>
+        <button id="addBtn" class="admin-btn">Kaydet</button>
+      </div>
+
+      <!-- Kelime listesi -->
+      <div class="panel">
+        <h2>📚 Kelimeler (<span id="count">0</span>)</h2>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Görsel</th>
+                <th>İngilizce</th>
+                <th>Türkçe</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="wordList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
