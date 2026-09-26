@@ -25,6 +25,8 @@
 
 | | Özellik | Açıklama |
 |:--:|:--|:--|
+| 🎯 | **İki mod** | Girişte seçim: 🖼️ **Kelime Oyunu** (resimli) veya 🗣️ **Sorular & Konuşma** (sesli cümleler) |
+| 🗣️ | **Konuşma modu** | "What is your name?" gibi basit cümleleri sesli okur; **İleri** ile sonrakine geçilir (30+ cümle) |
 | 🔊 | **Sesli telaffuz** | Tarayıcının İngilizce sesi kelimeyi net ve yavaş okur (ekstra dosya yok) |
 | 🖼️ | **Gerçek görseller** | 230+ gerçek fotoğraf; küçültülüp **base64** olarak veritabanında saklanır |
 | 🔤 | **Çift dilli etiket** | Resmin altında İngilizce kelime + küçük parantezle **Türkçesi** *(elma)* |
@@ -123,6 +125,9 @@ enoyun/
 | `/api/words/:id/image` | `GET` | Görseli sunar (önbellekli) |
 | `/api/players` | `GET` | Skor tablosu |
 | `/api/players` | `POST` | Skoru + gelişim geçmişini kaydeder |
+| `/api/phrases` | `GET` | Konuşma cümlelerini listeler |
+| `/api/phrases` | `POST` | Cümle ekler (admin, kopya kontrollü) |
+| `/api/phrases/:id` | `DELETE` | Cümle siler (admin) |
 | `/api/admin-login` | `POST` | Yönetici şifresini doğrular |
 
 ---

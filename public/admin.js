@@ -138,6 +138,7 @@ function openPanel() {
   el("loginBox").style.display = "none";
   el("panelBox").style.display = "block";
   loadWords();
+  loadPhrases();
 }
 
 function logout() {
@@ -238,6 +239,107 @@ async function del(id) {
   }
 }
 
+/* ===========================================================
+   Konuşma soruları yönetimi
+   =========================================================== */
+let phrasesCache = [];
+
+function isPhraseDup(en) {
+  const q = en.trim().toLowerCase();
+  return q && phrasesCache.some((p) => (p.en || "").toLowerCase() === q);
+}
+function checkPhraseDupLive() {
+  const hint = el("pDupHint");
+  const en = el("p-en").value.trim();
+  if (en && isPhraseDup(en)) {
+    hint.textContent = "⚠️ Bu cümle zaten var.";
+    hint.className = "dup-hint warn";
+  } else if (en) {
+    hint.textContent = "✓ Uygun";
+    hint.className = "dup-hint ok";
+  } else {
+    hint.textContent = "";
+    hint.className = "dup-hint";
+  }
+}
+
+async function loadPhrases() {
+  try {
+    const res = await fetch("/api/phrases");
+    const list = await res.json();
+    phrasesCache = list;
+    el("pcount").textContent = list.length;
+    const tbody = el("phraseList");
+    tbody.innerHTML = "";
+    list.forEach((p) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><b>${escapeHtml(p.en)}</b></td>
+        <td>${escapeHtml(p.tr)}</td>
+        <td><button class="admin-btn danger" data-id="${p.id}">🗑 Sil</button></td>`;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll("button[data-id]").forEach((b) => {
+      b.onclick = () => delPhrase(b.dataset.id);
+    });
+  } catch {
+    showMsg("Sorular yüklenemedi.", false);
+  }
+}
+
+async function addPhrase() {
+  const en = el("p-en").value.trim();
+  const tr = el("p-tr").value.trim();
+  if (!en) return showMsg("İngilizce cümle zorunlu.", false);
+  if (isPhraseDup(en)) return showMsg(`"${en}" zaten var.`, false);
+
+  el("addPhraseBtn").disabled = true;
+  try {
+    const res = await fetch("/api/phrases", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Admin-Password": adminPass },
+      body: JSON.stringify({ en, tr }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showMsg(`"${en}" eklendi ✅`);
+      el("p-en").value = "";
+      el("p-tr").value = "";
+      el("pDupHint").textContent = "";
+      el("pDupHint").className = "dup-hint";
+      el("p-en").focus();
+      loadPhrases();
+    } else {
+      if (res.status === 401) logout();
+      showMsg(data.error || "Eklenemedi.", false);
+    }
+  } catch {
+    showMsg("Bağlantı hatası.", false);
+  } finally {
+    el("addPhraseBtn").disabled = false;
+  }
+}
+
+async function delPhrase(id) {
+  if (!confirm("Bu soru silinsin mi?")) return;
+  try {
+    const res = await fetch(`/api/phrases/${id}`, {
+      method: "DELETE",
+      headers: { "X-Admin-Password": adminPass },
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showMsg("Silindi.");
+      loadPhrases();
+    } else {
+      if (res.status === 401) logout();
+      showMsg(data.error || "Silinemedi.", false);
+    }
+  } catch {
+    showMsg("Bağlantı hatası.", false);
+  }
+}
+
 /* ---------- Olaylar ---------- */
 el("loginBtn").onclick = login;
 el("pass").addEventListener("keydown", (e) => e.key === "Enter" && login());
@@ -245,5 +347,8 @@ el("addBtn").onclick = addWord;
 el("logoutBtn").onclick = logout;
 el("f-file").addEventListener("change", onFileChange);
 el("f-en").addEventListener("input", checkDupLive);
+el("addPhraseBtn").onclick = addPhrase;
+el("p-en").addEventListener("input", checkPhraseDupLive);
+el("p-tr").addEventListener("keydown", (e) => e.key === "Enter" && addPhrase());
 
 if (adminPass) openPanel();

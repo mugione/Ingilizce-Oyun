@@ -24,7 +24,9 @@
             maxlength="20"
             autocomplete="off"
           />
-          <button id="startBtn" class="btn green">▶ Oyna</button>
+          <p class="choose-label">Ne yapmak istersin?</p>
+          <button id="startBtn" class="btn green mode-btn">🖼️ Kelime Oyunu</button>
+          <button id="startTalkBtn" class="btn mode-btn">🗣️ Sorular &amp; Konuşma</button>
           <a class="link" href="admin.html">⚙️ Yönetici Girişi</a>
         </div>
       </section>
@@ -32,6 +34,7 @@
       <!-- ======= OYUN EKRANI ======= -->
       <section id="screen-game" class="screen">
         <div class="topbar">
+          <button class="pill pill-btn" id="gameExit" title="Çıkış" aria-label="Çıkış">✖</button>
           <span class="pill" id="hi">👋</span>
           <span class="pill" id="qcount">1 / 10</span>
           <span class="pill score" id="score">⭐ 0</span>
@@ -45,6 +48,27 @@
 
         <div class="options" id="options"></div>
         <div class="feedback" id="feedback"></div>
+      </section>
+
+      <!-- ======= KONUŞMA / SORULAR EKRANI ======= -->
+      <section id="screen-talk" class="screen">
+        <div class="topbar">
+          <span class="pill" id="talkHi">👋</span>
+          <span class="pill" id="talkCount">1 / 30</span>
+          <button class="pill pill-btn" id="talkExit">✖ Çıkış</button>
+        </div>
+        <div class="progress"><span id="talkProgress"></span></div>
+
+        <div class="talk-card">
+          <button id="talkSpeaker" class="speaker" aria-label="Dinle">🔊</button>
+          <div class="talk-en" id="talkEn"></div>
+          <div class="talk-tr" id="talkTr"></div>
+        </div>
+
+        <div class="talk-nav">
+          <button id="talkPrev" class="btn small ghost-btn">⬅ Geri</button>
+          <button id="talkNext" class="btn green">İleri ➡</button>
+        </div>
       </section>
 
       <!-- ======= SONUÇ EKRANI ======= -->

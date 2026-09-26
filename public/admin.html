@@ -80,6 +80,35 @@
           </table>
         </div>
       </div>
+
+      <!-- Konuşma soruları -->
+      <div class="panel">
+        <h2>🗣️ Konuşma Soruları (<span id="pcount">0</span>)</h2>
+        <div class="form-row">
+          <div class="field">
+            <label>İngilizce cümle / soru *</label>
+            <input id="p-en" placeholder="What is your name?" autocomplete="off" />
+            <small id="pDupHint" class="dup-hint"></small>
+          </div>
+          <div class="field">
+            <label>Türkçe karşılığı (isteğe bağlı)</label>
+            <input id="p-tr" placeholder="Adın ne?" />
+          </div>
+        </div>
+        <button id="addPhraseBtn" class="admin-btn">Ekle</button>
+        <div style="overflow-x: auto; margin-top: 14px">
+          <table>
+            <thead>
+              <tr>
+                <th>İngilizce</th>
+                <th>Türkçe</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="phraseList"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <script src="admin.js"></script>

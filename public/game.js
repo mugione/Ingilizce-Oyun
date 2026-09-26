@@ -18,6 +18,7 @@ const screens = {
   login: el("screen-login"),
   game: el("screen-game"),
   result: el("screen-result"),
+  talk: el("screen-talk"),
 };
 function show(name) {
   Object.values(screens).forEach((s) => s.classList.remove("active"));
@@ -32,6 +33,7 @@ let firstTryCount = 0;
 let playerName = "";
 let triedWrong = false;
 let locked = false;
+let pendingTimer = null; // sıradaki soruya geçiş zamanlayıcısı
 
 /* ---------- Sesli okuma (Web Speech API) ---------- */
 let enVoice = null;
@@ -175,7 +177,7 @@ function choose(div, opt, correct) {
     el("feedback").textContent = pickPraise() + ` +${gained}`;
     speak(correct.en);
     confettiBurst();
-    setTimeout(next, 1300);
+    pendingTimer = setTimeout(next, 1300);
   } else {
     triedWrong = true;
     div.classList.add("wrong");
@@ -189,12 +191,21 @@ const pickPraise = () => praises[Math.floor(Math.random() * praises.length)];
 
 /* ---------- Sonraki soru / bitiş ---------- */
 function next() {
+  // Oyundan çıkıldıysa (başa dönüldüyse) ilerleme
+  if (!screens.game.classList.contains("active")) return;
   current++;
   if (current >= questions.length) {
     finish();
   } else {
     renderQuestion();
   }
+}
+
+// Oyunu bırakıp giriş ekranına dön
+function exitGame() {
+  if (pendingTimer) clearTimeout(pendingTimer);
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  show("login");
 }
 
 async function finish() {
@@ -338,12 +349,81 @@ async function startGame() {
   renderQuestion();
 }
 
+/* ===========================================================
+   Konuşma / Sorular modu (flashcard)
+   =========================================================== */
+let phrases = [];
+let talkIndex = 0;
+
+async function loadPhrases() {
+  try {
+    const res = await fetch("/api/phrases");
+    phrases = await res.json();
+  } catch {
+    phrases = [];
+  }
+}
+
+async function startTalk() {
+  const name = el("name").value.trim();
+  if (!name) {
+    el("name").focus();
+    el("name").style.borderColor = "#ef4444";
+    return;
+  }
+  playerName = name.slice(0, 20);
+  localStorage.setItem("kelime_isim", playerName);
+  el("talkHi").textContent = `👋 ${playerName}`;
+  if (window.speechSynthesis) speak(" ");
+  await loadPhrases();
+  if (!phrases.length) {
+    alert("Henüz soru eklenmemiş. Yönetici panelinden ekleyebilirsiniz.");
+    return;
+  }
+  talkIndex = 0;
+  show("talk");
+  renderPhrase();
+}
+
+function renderPhrase() {
+  const p = phrases[talkIndex];
+  el("talkCount").textContent = `${talkIndex + 1} / ${phrases.length}`;
+  el("talkProgress").style.width = `${((talkIndex + 1) / phrases.length) * 100}%`;
+  el("talkEn").textContent = p.en;
+  el("talkTr").textContent = p.tr || "";
+  el("talkPrev").disabled = talkIndex === 0;
+  el("talkNext").textContent = talkIndex === phrases.length - 1 ? "🎉 Bitti" : "İleri ➡";
+  setTimeout(() => speak(p.en), 250);
+}
+
+function talkNext() {
+  if (talkIndex >= phrases.length - 1) {
+    confettiBurst(120);
+    show("login");
+    return;
+  }
+  talkIndex++;
+  renderPhrase();
+}
+function talkPrev() {
+  if (talkIndex > 0) {
+    talkIndex--;
+    renderPhrase();
+  }
+}
+
 /* ---------- Olaylar ---------- */
 el("startBtn").onclick = startGame;
+el("startTalkBtn").onclick = startTalk;
+el("talkSpeaker").onclick = () => speak(phrases[talkIndex]?.en || "");
+el("talkNext").onclick = talkNext;
+el("talkPrev").onclick = talkPrev;
+el("talkExit").onclick = () => show("login");
 el("name").addEventListener("keydown", (e) => {
   if (e.key === "Enter") startGame();
 });
 el("speaker").onclick = () => speak(questions[current]?.correct.en || "");
+el("gameExit").onclick = exitGame;
 el("playAgain").onclick = startGame;
 el("changeName").onclick = (e) => {
   e.preventDefault();

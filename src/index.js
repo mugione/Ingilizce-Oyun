@@ -239,3 +239,36 @@ async function adminLogin(request, env) {
   if (b.password === env.ADMIN_PASSWORD) return json({ ok: true });
   return json({ error: "Şifre hatalı." }, 401);
 }
+
+/* ---------------- Konuşma cümleleri ---------------- */
+async function listPhrases(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, en, tr FROM phrases ORDER BY id ASC"
+  ).all();
+  return json(results || []);
+}
+
+async function addPhrase(request, env) {
+  if (!isAdmin(request, env)) return json({ error: "Yetkisiz. Admin şifresi hatalı." }, 401);
+  const b = await request.json().catch(() => null);
+  if (!b) return json({ error: "Geçersiz istek." }, 400);
+  const en = (b.en || "").trim();
+  const tr = (b.tr || "").trim();
+  if (!en) return json({ error: "İngilizce cümle zorunludur." }, 400);
+
+  const exists = await env.DB.prepare("SELECT id FROM phrases WHERE lower(en) = lower(?)")
+    .bind(en)
+    .first();
+  if (exists) return json({ error: `"${en}" zaten ekli.`, code: "duplicate" }, 409);
+
+  const res = await env.DB.prepare("INSERT INTO phrases (en, tr) VALUES (?, ?)")
+    .bind(en, tr)
+    .run();
+  return json({ id: res.meta.last_row_id, en, tr }, 201);
+}
+
+async function deletePhrase(request, env, id) {
+  if (!isAdmin(request, env)) return json({ error: "Yetkisiz. Admin şifresi hatalı." }, 401);
+  await env.DB.prepare("DELETE FROM phrases WHERE id = ?").bind(id).run();
+  return json({ ok: true });
+}
