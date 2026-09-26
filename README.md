@@ -36,6 +36,7 @@
 | 📈 | **Gelişim takibi** | İlk-denemede-doğru, en yüksek skor, oyun sayısı ve son oyunların grafiği |
 | 👶 | **Okuma gerektirmez** | Çocuk sadece adını yazıp oynar; resimlerin altında kelime de yazılı |
 | 📱 | **Responsive** | Telefon, tablet, bilgisayar — pencereye tam sığar, kaydırma çubuğu yok |
+| 📲 | **Ana ekrana ekle** | Telefon/tablette "Ana ekrana eklemek ister misin?" sorar; uygulama gibi açılır (PWA + çevrimdışı) |
 | 🔒 | **Yönetici paneli** | Şifreyle kelime ekle/sil; **kopya kelime kontrolü** ile |
 
 ---

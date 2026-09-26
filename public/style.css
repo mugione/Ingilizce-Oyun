@@ -21,6 +21,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* hidden özniteliği her zaman gizlesin (display kuralları ezmesin) */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -790,4 +795,80 @@ th {
   .wrap {
     max-width: 720px;
   }
+}
+
+/* ===== Ana ekrana ekle (PWA) ===== */
+.install-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #7c4dff, #18b6ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.25);
+}
+.install-text {
+  font-weight: bold;
+  font-size: 15px;
+}
+.install-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.install-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 15px;
+  padding: 10px 18px;
+  border-radius: 12px;
+}
+.install-btn.yes {
+  background: #ffd23f;
+  color: #6b4a00;
+}
+.install-btn.no {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.ios-help {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.ios-help-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 26px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.ios-help-emoji {
+  font-size: 48px;
+}
+.ios-help-card p {
+  font-size: 17px;
+  color: var(--ink);
+  margin: 10px 0;
+}
+.ios-help-card .btn {
+  margin-top: 14px;
 }

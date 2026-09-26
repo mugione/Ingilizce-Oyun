@@ -6,6 +6,15 @@
     <title>İngilizce Kelime Oyunu 🎈</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎈</text></svg>" />
+
+    <!-- Ana ekrana ekle (PWA) -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#7c4dff" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Kelime Oyunu" />
   </head>
   <body>
     <canvas id="confetti"></canvas>
@@ -111,6 +120,27 @@
       </section>
     </div>
 
+    <!-- Ana ekrana ekleme şeridi -->
+    <div id="installBar" class="install-bar" hidden>
+      <span class="install-text">📲 Bu oyunu ana ekrana eklemek ister misin?</span>
+      <span class="install-actions">
+        <button id="installYes" class="install-btn yes">Evet</button>
+        <button id="installNo" class="install-btn no">Şimdi değil</button>
+      </span>
+    </div>
+
+    <!-- iPhone/iPad için adım adım yardım -->
+    <div id="iosHelp" class="ios-help" hidden>
+      <div class="ios-help-card">
+        <div class="ios-help-emoji">📲</div>
+        <p><b>Ana ekrana eklemek için:</b></p>
+        <p>1️⃣ Aşağıdaki <b>Paylaş</b> düğmesine dokun ⬆️</p>
+        <p>2️⃣ <b>"Ana Ekrana Ekle"</b> seçeneğini seç ➕</p>
+        <button id="iosHelpClose" class="btn green">Anladım</button>
+      </div>
+    </div>
+
     <script src="game.js"></script>
+    <script src="pwa.js"></script>
   </body>
 </html>
