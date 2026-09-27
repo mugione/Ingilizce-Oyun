@@ -380,6 +380,7 @@ async function startTalk() {
     alert("Henüz soru eklenmemiş. Yönetici panelinden ekleyebilirsiniz.");
     return;
   }
+  phrases = shuffle(phrases); // her açılışta karışık sırayla gelsin
   talkIndex = 0;
   show("talk");
   renderPhrase();
