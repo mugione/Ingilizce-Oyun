@@ -32,12 +32,15 @@ function parseDataUrl(dataUrl) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
 
     if (path.startsWith("/api/")) {
       try {
+        // /api/tts?text=apple  -> doğal İngilizce ses (Workers AI)
+        if (path === "/api/tts" && request.method === "GET") return tts(url, env, ctx);
+
         if (path === "/api/words") {
           if (request.method === "GET") return listWords(env);
           if (request.method === "POST") return addWord(request, env);
@@ -76,6 +79,51 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+/* ---------------- Doğal ses (Workers AI) ---------------- */
+// Her kelime/cümle bir kez üretilir, sonra önbellekten gelir (kota harcamaz).
+// Kotayı korumak için yalnızca veritabanındaki kelime ve cümleler seslendirilir.
+const TTS_MODEL = "@cf/deepgram/aura-2-en";
+const TTS_SPEAKER = "asteria";
+
+async function tts(url, env, ctx) {
+  const text = (url.searchParams.get("text") || "").trim();
+  if (!text || text.length > 200) return json({ error: "Geçersiz metin." }, 400);
+  if (!env.AI) return json({ error: "AI bağlantısı yok." }, 503);
+
+  const cache = caches.default;
+  const cacheKey = new Request(
+    `https://tts-cache.enoyun/${TTS_SPEAKER}/${encodeURIComponent(text.toLowerCase())}`
+  );
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
+
+  const known = await env.DB.prepare(
+    "SELECT 1 FROM words WHERE lower(en) = lower(?1) UNION SELECT 1 FROM phrases WHERE lower(en) = lower(?1) LIMIT 1"
+  )
+    .bind(text)
+    .first();
+  if (!known) return json({ error: "Bu metin oyunda yok." }, 404);
+
+  const out = await env.AI.run(TTS_MODEL, { text, speaker: TTS_SPEAKER, encoding: "mp3" });
+  // Model sürümüne göre akış, ikili veri ya da base64 dönebilir
+  const body =
+    out instanceof ReadableStream || out instanceof ArrayBuffer || out instanceof Uint8Array
+      ? out
+      : out?.audio
+        ? Uint8Array.from(atob(out.audio), (c) => c.charCodeAt(0))
+        : null;
+  if (!body) return json({ error: "Ses üretilemedi." }, 502);
+
+  const res = new Response(body, {
+    headers: {
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+  ctx.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+}
 
 /* ---------------- Kelimeler ---------------- */
 // Liste hafif tutulur: base64 görsel gönderilmez, sadece meta bilgiler.
