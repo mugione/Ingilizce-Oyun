@@ -7,6 +7,10 @@ compatibility_date = "2025-07-18"
 directory = "./public"
 binding = "ASSETS"
 
+# Workers AI (doğal İngilizce ses)
+[ai]
+binding = "AI"
+
 # D1 veritabanı bağlantısı
 [[d1_databases]]
 binding = "DB"

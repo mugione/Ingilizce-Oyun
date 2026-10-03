@@ -10,6 +10,7 @@
 
 ![Platform](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
 ![Database](https://img.shields.io/badge/D1-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![AI](https://img.shields.io/badge/Workers_AI-Doğal_Ses-8b5cf6?style=for-the-badge&logo=cloudflare&logoColor=white)
 ![Kelime](https://img.shields.io/badge/Kelime-230%2B-22c55e?style=for-the-badge)
 ![Yaş](https://img.shields.io/badge/Yaş-6%2B-7c4dff?style=for-the-badge)
 
@@ -27,7 +28,9 @@
 |:--:|:--|:--|
 | 🎯 | **İki mod** | Girişte seçim: 🖼️ **Kelime Oyunu** (resimli) veya 🗣️ **Sorular & Konuşma** (sesli cümleler) |
 | 🗣️ | **Konuşma modu** | "What is your name?" gibi basit cümleleri sesli okur; **İleri** ile sonrakine geçilir (30+ cümle) |
-| 🔊 | **Sesli telaffuz** | Tarayıcının İngilizce sesi kelimeyi net ve yavaş okur (ekstra dosya yok) |
+| 🎙️ | **Doğal yapay zeka sesi** | Kelimeler ve cümleler **Cloudflare Workers AI** (Deepgram Aura-2) ile anadili İngilizce olan biri gibi okunur — her cihazda aynı, net ve sıcak ses |
+| ⚡ | **Anında ses** | Her kelimenin sesi **bir kez** üretilir, sonra önbellekten gelir; sıradaki kelime önceden yüklenir |
+| 🛟 | **Yedek ses** | Yapay zeka sesine ulaşılamazsa tarayıcının İngilizce sesi otomatik devreye girer — oyun hiç sessiz kalmaz |
 | 🖼️ | **Gerçek görseller** | 230+ gerçek fotoğraf; küçültülüp **base64** olarak veritabanında saklanır |
 | 🔤 | **Çift dilli etiket** | Resmin altında İngilizce kelime + küçük parantezle **Türkçesi** *(elma)* |
 | 🎲 | **Karışık sorular** | Her oyunda 230+ kelimelik havuzdan **rastgele 20 soru** |
@@ -45,7 +48,7 @@
 
 ```
 1. 👶  Çocuk adını yazar  ▶ Oyna
-2. 🔊  Kelime sesli okunur ("apple")
+2. 🔊  Kelime doğal bir sesle okunur ("apple")
 3. 🖼️  4 resimden doğrusuna dokunur
 4. ⭐  Doğru → puan!  (ilk denemede +10, sonra +5)
 5. 🎉  20 soru sonunda: skor, gelişim grafiği ve bölüm ilerlemesi
@@ -80,21 +83,79 @@
 
 ---
 
+## 🎙️ Doğal Ses (Workers AI)
+
+Oyun, kelimeleri tarayıcının robotik sesi yerine **yapay zekayla üretilmiş doğal bir İngilizce sesle** okur.
+
+```
+🔊 Kelime istenir ──► ⚡ Önbellekte var mı?
+                         │
+              ┌──────────┴──────────┐
+            Evet                  Hayır
+              │                     │
+              ▼                     ▼
+     Anında çalınır      Kelime oyunda kayıtlı mı?
+      (kota: 0)                     │
+                          ┌─────────┴─────────┐
+                        Evet                Hayır
+                          │                   │
+                          ▼                   ▼
+              🎙️ Aura-2 sesi üretir     ⛔ Reddedilir
+              → önbelleğe alınır        (kota korunur)
+              → çalınır
+```
+
+| | Özellik | Ayrıntı |
+|:--:|:--|:--|
+| 🗣️ | **Model** | `@cf/deepgram/aura-2-en` — ses: **Asteria** (sıcak, net kadın sesi) |
+| 🐢 | **Çocuk hızı** | Ses `0.85` hızında çalınır, perde (pitch) korunur |
+| 💾 | **Önbellek** | Üretilen ses Cloudflare önbelleğinde ve tarayıcıda 1 yıl saklanır |
+| 📱 | **Mobil uyumlu** | İlk dokunuşta ses kilidi açılır; böylece mobil tarayıcılar sonraki otomatik okumalara izin verir |
+| 📴 | **Çevrimdışı** | Dinlenen sesler service worker ile saklanır, internetsiz de çalınır |
+| 🛡️ | **Kota koruması** | Yalnızca veritabanındaki kelime ve cümleler seslendirilir; dışarıdan rastgele metin okutulamaz |
+
+> 💰 **Maliyet:** Cloudflare'in ücretsiz planı günde **10.000 Neuron** verir. 230+ kelime ve
+> 30+ cümlenin tamamını seslendirmek bunun altında kalır ve **yalnızca bir kez** harcanır —
+> sonrasında sesler önbellekten gelir. Yeni kelime ekledikçe sadece o kelimenin sesi üretilir.
+
+<details>
+<summary><b>🎚️ Sesi değiştirmek istersen</b></summary>
+
+<br>
+
+`src/index.js` içindeki `TTS_SPEAKER` değerini değiştirip yeniden yayınla:
+
+```js
+const TTS_SPEAKER = "asteria"; // luna, thalia, helena, athena, hera, apollo, orion ...
+```
+
+Aura-2'nin 40 İngilizce sesi vardır. Ses değişince önbellek anahtarı da değiştiği için
+kelimeler yeni sesle bir kez daha üretilir.
+
+</details>
+
+---
+
 ## 🏗️ Teknoloji
 
 ```
-┌─────────────────────────────────────────────────┐
-│              Cloudflare Workers                   │
-│  ┌───────────────┐        ┌───────────────────┐  │
-│  │  Statik site  │        │   /api/*  (JS)    │  │
-│  │ index / admin │◄──────►│  kelime · skor    │  │
-│  └───────────────┘        └─────────┬─────────┘  │
-│                                     ▼             │
-│                          ┌────────────────────┐  │
-│                          │   D1 (SQLite DB)   │  │
-│                          │ words · players    │  │
-│                          └────────────────────┘  │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    Cloudflare Workers                    │
+│  ┌───────────────┐        ┌────────────────────────┐     │
+│  │  Statik site  │        │      /api/*  (JS)      │     │
+│  │ index / admin │◄──────►│  kelime · skor · ses   │     │
+│  └───────────────┘        └─────┬─────────────┬────┘     │
+│                                 ▼             ▼          │
+│                   ┌──────────────────┐  ┌──────────────┐ │
+│                   │  D1 (SQLite DB)  │  │  Workers AI  │ │
+│                   │ words · players  │  │  Aura-2 ses  │ │
+│                   └──────────────────┘  └──────┬───────┘ │
+│                                                ▼         │
+│                                   ┌───────────────────┐  │
+│                                   │ Önbellek (1 kez   │  │
+│                                   │ üret, hep çal)    │  │
+│                                   └───────────────────┘  │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -106,13 +167,13 @@ enoyun/
 ├── 📁 public/                # Görünen kısım (statik)
 │   ├── 🎮 index.html         # Oyun
 │   ├── ⚙️ admin.html         # Yönetici paneli
-│   ├── 🧠 game.js            # Oyun mantığı (seviye, gelişim, ses)
+│   ├── 🧠 game.js            # Oyun mantığı (seviye, gelişim, doğal ses + yedek)
 │   ├── 🛠️ admin.js           # Kelime ekleme/silme + kopya kontrolü
 │   └── 🎨 style.css          # Renkli, responsive tasarım
 ├── 📁 src/
-│   └── ⚡ index.js           # Worker: /api/* + statik sunum
+│   └── ⚡ index.js           # Worker: /api/* + doğal ses + statik sunum
 ├── 🗄️ schema.sql             # Tablolar (words, players)
-├── ⚙️ wrangler.toml          # Worker + D1 + assets ayarı
+├── ⚙️ wrangler.toml          # Worker + D1 + Workers AI + assets ayarı
 └── 📦 package.json
 ```
 
@@ -130,6 +191,7 @@ enoyun/
 | `/api/phrases` | `POST` | Cümle ekler (admin, kopya kontrollü) |
 | `/api/phrases/:id` | `DELETE` | Cümle siler (admin) |
 | `/api/admin-login` | `POST` | Yönetici şifresini doğrular |
+| `/api/tts?text=apple` | `GET` | Kelimenin/cümlenin doğal sesini MP3 olarak döndürür (önbellekli, yalnızca kayıtlı metinler) |
 
 ---
 
@@ -174,6 +236,9 @@ npx wrangler d1 execute kelime-oyunu --local --file=schema.sql
 npm run dev            # .dev.vars içine ADMIN_PASSWORD ekleyin
 ```
 
+> 🎙️ **Doğal ses yerelde de çalışır**, ama Workers AI her zaman Cloudflare hesabına bağlanır:
+> önce `npx wrangler login` yapın. Yerel testte üretilen sesler de günlük kotadan düşer.
+
 ---
 
 ## 🎨 Özelleştirme İpuçları
@@ -183,6 +248,7 @@ npm run dev            # .dev.vars içine ADMIN_PASSWORD ekleyin
 - 🎯 **Kelime havuzu:** İstediğiniz kadar kelime ekleyip çıkarabilirsiniz (en az 4 olmalı).
 - 🎚️ **Bölüm eşiği:** `public/game.js` içindeki `LEVEL_STEP` (varsayılan 300) değeriyle ayarlanır.
 - ❓ **Soru sayısı:** Yine `game.js` içindeki `QUESTIONS_PER_GAME` (varsayılan 20).
+- 🎙️ **Ses ve hız:** Ses için `src/index.js` → `TTS_SPEAKER`; okuma hızı için `game.js` → `player.playbackRate` (varsayılan 0.85).
 
 ---
 
@@ -194,6 +260,10 @@ Bu depo **herkese açık yayınlanabilir**. Kod içinde gizli bilgi tutulmaz:
 - ✅ API anahtarları/token repoya **girmez** (`.dev.vars` ve `.wrangler/` `.gitignore`'dadır).
 - ✅ `wrangler.toml` içindeki `database_id` gizli değildir — sadece bir kimliktir; erişim için
   yine hesabınıza ait token gerekir.
+- ✅ Yapay zeka **API anahtarı gerektirmez** — Worker, Workers AI'a Cloudflare'in iç bağlantısıyla
+  (`[ai]` binding) erişir. Kodu alan biri kendi hesabında çalıştırır, sizin kotanızı kullanamaz.
+- ✅ `/api/tts` yalnızca veritabanında kayıtlı kelime/cümleleri seslendirir; rastgele metinle
+  kotanın tüketilmesi engellenir.
 - ✅ Tüm veritabanı sorguları **parametreli** (SQL injection'a kapalı); kullanıcı metni ekranda
   **kaçışlanır** (XSS'e karşı); görseller yalnızca güvenli türlerde (JPEG/PNG/WebP/GIF) kabul edilir.
 

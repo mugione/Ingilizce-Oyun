@@ -77,7 +77,53 @@ if (window.speechSynthesis) {
   speechSynthesis.onvoiceschanged = pickVoice;
 }
 
+/* ---------- Doğal ses (sunucuda Workers AI ile üretilir) ----------
+   Tek bir <audio> kullanılır: mobilde ilk dokunuşta kilidi açılınca
+   sonraki otomatik okumalara da izin verilir. Ses gelmezse tarayıcı
+   sesine (speakBrowser) düşülür. */
+const player = new Audio();
+const ttsUrl = (text) => "/api/tts?text=" + encodeURIComponent(text);
+
+// Kısa sessiz WAV — mobilde ses çalmanın kilidini açmak için
+function silentWav() {
+  const n = 800, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVEfmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 16000, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+}
+
+function unlockAudio() {
+  player.src = silentWav();
+  player.play().catch(() => {});
+  if (window.speechSynthesis) speakBrowser(" ");
+}
+
+// Sıradaki kelimenin sesini önceden indir (tarayıcı önbelleğine alınır)
+function preloadSpeech(text) {
+  if (text) fetch(ttsUrl(text)).catch(() => {});
+}
+
+function stopSpeaking() {
+  player.pause();
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
 function speak(text) {
+  if (!text || !text.trim()) return;
+  stopSpeaking();
+  player.src = ttsUrl(text);
+  player.playbackRate = 0.85; // çocuk için biraz yavaş
+  player.preservesPitch = true;
+  player.play().catch((err) => {
+    if (err.name !== "AbortError") speakBrowser(text); // AbortError: yeni ses başladı
+  });
+}
+
+function speakBrowser(text) {
   if (!window.speechSynthesis || !text) return;
   speechSynthesis.cancel();
   if (!enVoice) pickVoice(); // ilk seferde ses hazır değilse tekrar dene
@@ -162,6 +208,7 @@ function renderQuestion() {
 
   // Kelimeyi otomatik seslendir
   setTimeout(() => speak(q.correct.en), 350);
+  preloadSpeech(questions[current + 1]?.correct.en);
 }
 
 /* ---------- Cevap seçildiğinde ---------- */
@@ -204,7 +251,7 @@ function next() {
 // Oyunu bırakıp giriş ekranına dön
 function exitGame() {
   if (pendingTimer) clearTimeout(pendingTimer);
-  if (window.speechSynthesis) speechSynthesis.cancel();
+  stopSpeaking();
   show("login");
 }
 
@@ -333,7 +380,7 @@ async function startGame() {
   el("hi").textContent = `👋 ${playerName}`;
 
   // Sesi ilk dokunuşta uyandır (mobil tarayıcılar için)
-  if (window.speechSynthesis) speak(" ");
+  unlockAudio();
 
   await loadWords();
   const usable = allWords.filter((w) => w.en);
@@ -374,7 +421,7 @@ async function startTalk() {
   playerName = name.slice(0, 20);
   localStorage.setItem("kelime_isim", playerName);
   el("talkHi").textContent = `👋 ${playerName}`;
-  if (window.speechSynthesis) speak(" ");
+  unlockAudio();
   await loadPhrases();
   if (!phrases.length) {
     alert("Henüz soru eklenmemiş. Yönetici panelinden ekleyebilirsiniz.");
@@ -395,6 +442,7 @@ function renderPhrase() {
   el("talkPrev").disabled = talkIndex === 0;
   el("talkNext").textContent = talkIndex === phrases.length - 1 ? "🎉 Bitti" : "İleri ➡";
   setTimeout(() => speak(p.en), 250);
+  preloadSpeech(phrases[talkIndex + 1]?.en);
 }
 
 function talkNext() {
